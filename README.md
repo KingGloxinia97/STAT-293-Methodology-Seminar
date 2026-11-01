@@ -1,0 +1,2 @@
+# STAT-293-Methodology-Seminar
+This is the repository for the midterm methodology seminar for STAT 293 with Dr. Sanchez-Gomez Fall 2026
