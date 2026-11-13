@@ -44,20 +44,19 @@ X2 <- vector("list", length(delta_values))
 
 for (j in seq_along(delta_values)) {
   delta <- delta_values[j]
-
+  
   # delta = 0 satisfies the null; positive delta adds a perturbation
   Lambda2[[j]] <- Lambda1 %*% Phi + delta * B
-
+  
   # Generate and center the second dataset
   X2[[j]] <- F2 %*% t(Lambda2[[j]]) + E2
   X2[[j]] <- scale(X2[[j]], center = TRUE, scale = FALSE)
 }
 
 
-# 2. Prepare the figures
+# Visualization of Data
 
 # Calculate the projection matrix for the first loading space.
-# Q contains orthonormal columns, so the projection is Q %*% t(Q).
 Q1 <- qr.Q(qr(Lambda1))
 P1 <- Q1 %*% t(Q1)
 
@@ -67,11 +66,11 @@ projection_differences <- vector("list", length(delta_values))
 for (j in seq_along(delta_values)) {
   Q2 <- qr.Q(qr(Lambda2[[j]]))
   P2 <- Q2 %*% t(Q2)
-
+  
   projection_differences[[j]] <- P2 - P1
 }
 
-# Colors for the first three observed series
+# The first 3 factors
 series_colors <- c("steelblue", "firebrick", "darkgreen")
 
 # Use the same vertical limits across all series plots.
@@ -107,7 +106,7 @@ plot_series <- function(j) {
     ylab = "Observed value",
     main = bquote(delta == .(delta_values[j]))
   )
-
+  
   legend(
     "topright",
     legend = paste("Series", 1:3),
@@ -119,11 +118,8 @@ plot_series <- function(j) {
 }
 
 
-# 2b. Function for one projection-difference plot
+# Function for one projection-difference plot
 
-# Each cell shows an entry of P2 - P1.
-# Under delta = 0, the loading spaces agree, so the plot
-# should be white apart from negligible numerical error.
 plot_projection <- function(j) {
   image(
     1:n_show,
@@ -138,49 +134,46 @@ plot_projection <- function(j) {
 }
 
 
-# 2c. Display all requested layouts
+# Display all layouts
 
-# plot_function is either plot_series or plot_projection.
-# This function displays plots without saving image files.
 show_figures <- function(plot_function) {
-
-  # Restore the original graphics settings when finished.
+  
   old_par <- par(no.readonly = TRUE)
   on.exit(par(old_par))
-
+  
   # Find the scenario corresponding to delta = 0.
   zero <- which(delta_values == 0)
-
-  # First: show each delta as a separate figure.
+  
+  # Each delta as a separate figure.
   par(mfrow = c(1, 1), mar = c(4, 4, 3, 1))
-
+  
   for (j in seq_along(delta_values)) {
     plot_function(j)
   }
-
-  # Second: show all four deltas in a 2 x 2 figure.
+  
+  # All four deltas in a 2 x 2 figure.
   par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
-
+  
   for (j in seq_along(delta_values)) {
     plot_function(j)
   }
-
-  # Third: compare delta = 0 with each positive delta.
-  # Each pair appears in its own side-by-side figure.
+  
+  # Compare delta = 0 with each positive delta (Pairs)
   for (j in which(delta_values > 0)) {
     par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
-
+    
     plot_function(zero)
     plot_function(j)
   }
 }
 
 
-# 2d. Display the observed-series figures
+#Display data figures
 
 show_figures(plot_series)
 
 
-# 2e. Display the projection-difference figures
+# Display the heatmap figures
 
 show_figures(plot_projection)
+
