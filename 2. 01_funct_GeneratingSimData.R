@@ -91,7 +91,7 @@ color_limit <- max(abs(unlist(projection_differences)))
 color_limit <- max(color_limit, .Machine$double.eps)
 
 
-# 2a. Function for one observed-series plot
+# Function for one observed-series plot
 
 # j identifies the delta scenario to display.
 plot_series <- function(j) {
@@ -169,11 +169,9 @@ show_figures <- function(plot_function) {
 
 
 #Display data figures
-
 show_figures(plot_series)
 
 
 # Display the heatmap figures
-
 show_figures(plot_projection)
 
