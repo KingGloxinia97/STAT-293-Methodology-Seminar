@@ -1,4 +1,4 @@
-# 3. Define the functions
+# Define the functions
 
 # Estimate a loading-space basis using PCA
 loading_basis <- function(X, r) {
@@ -115,7 +115,7 @@ wald_test <- function(F, bandwidth = ceiling(nrow(F)^(1 / 3))) {
 }
 
 
-# 4. State the hypothesis
+# State the hypothesis
 
 cat(
   "H0: Lambda_k = Lambda Phi_k, for k = 1, 2.\n",
@@ -141,8 +141,8 @@ kable(
 )
 
 
-# 5. Transform the data and run the test
-# we should be able to cut T in half
+# Transform the data and run the test
+# We should be able to cut T in half
 stopifnot(T %% 2 == 0)
 
 # Estimate loading space.
@@ -200,7 +200,7 @@ for (j in seq_along(delta_values)) {
 }
 
 
-# 6. Display the conclusions
+# Display the conclusions
 test_results <- do.call(rbind, results)
 
 test_results$conclusion <- ifelse(
