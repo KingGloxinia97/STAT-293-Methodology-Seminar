@@ -1,1 +1,122 @@
+---
+title: "Final Report(Midpoint)"
+author: "Walter Navarro"
+date: "2026-11-13"
+output: pdf_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Abstract
+
+High-dimensional factor models explain the interactions between many observed variables through a limited number of unobserved common factors. When comparing two data sets, a natural inquiry is whether the column spaces of their loading matrices are the same, albeit the entries are different. This study focuses on the testing process described by Düker and Pipiras (2024). The approach calculates the loading spaces by means of principal component analysis and performs a projection-based transformation which translates sufficient discrepancies between the spaces into an artificial structural break. Then we use a Wald test to compare the second moments of the estimated factors across the transformed series. We do preliminary Gaussian simulations to assess the empirical size and power under different departures from common structure. The results show little power for the smallest departure considered and substantial power for greater departures. Applying it to daily stock returns in 2020 and 2025 gives evidence against common structure for the specification presented, however the outcome depends on modeling choices. Future studies will use FarmTest to investigate temporal dependence, heavy-tailed errors, factor selection and the relationship between testing loading structure and testing variable means.
+
+#### Introduction
+
+A lot of high-dimensional datasets have multiple variables that move together. A way to capture these correlations is through a few unobserved common factors, as in factor models. For instance, stock returns may tend to co-vary in certain common ways, while individual stocks respond differently to those common co-movements.
+
+This project is concerned with the question of whether two data sets share a same loading structure. Our tool using real data analyzes the daily returns of the identical securities in 2020 and 2025. The repeated observations are the trading days, and the variables are the securities. We are interested in whether the space that describes their shared exposures is preserved between the two years.
+
+Two loading matrices can have distinct entries but describe the same underlying space. So a direct comparison of their entries may show a difference which is solely due to a change of factor coordinates. Likewise, the amount of variance described by the major components does not directly tell us whether the loading spaces differ.
+
+Düker and Pipiras (2024) present a method for verifying the equality of the loading space in two factor models. The approach calculates the loading spaces using a principal component analysis and changes one data set such that appropriate variations between the spaces generate an artificial structural break. Then a change-point test is performed for the estimated factors of the converted data. We present the concept, investigate its performance through preliminary simulations and discuss its application to daily stock returns.
+
+#### Methodology
+
+A factor model explains many observed variables by a smaller number of unobserved factors:
+$$X_t=\Lambda F_t+\varepsilon_t,\quad t=1,\ldots,T.$$
+
+Here $X_t$ is the $d$ observed variables, $F_t$ is the $r$ common factors and $\Lambda$ is the way each factor loads into each variable. We assume $r\ll d$ The error $\varepsilon$ is the variation not accounted for by the factors. The same common component can be defined by different loading matrices. 
+
+The transformation changes the factor coordinates, but does not change the loading space. Thus, we compare the loading spaces, not the individual loading entries. For two data sets we have $$X_t^{(k)}=\Lambda_kF_t^{(k)}+\varepsilon_t^{(k)},\qquad k=1,2.$$
+
+Our null hypothesis is $H_0:\Lambda_k=\Lambda\Phi_k$, for $k=1,2.$ where $\Lambda$ has full column rank and each $\Phi_k$ is nonsingular. Hence we assume that  $\operatorname{col}(\Lambda_1)=\operatorname{col}(\Lambda_2).$ 
+
+We estimate the factors and loadings by PCA. Assuming the observations are in rows, our objective function is  $\min_{\Lambda,\{F_t^k\}} \sum_{k=1}^{2}\sum_{t=1}^{T} \left\|X_t^k-\Lambda F_t^k\right\|_F^2\text{ subject to }       \frac{1}{T}\sum_{t=1}^{T}F_t^k(F_t^k)^\top=D_k\Sigma D_k, \qquad k=1,2..$ 
+The objective is to minimize reconstruction error, and the constraint is to normalize the factors. We find a solution via the truncated singular value decomposition. The number of factors is given by the rank and no sparsity penalty is applied.
+
+From the estimated loadings we form the projection matrices $$ \widehat P_k= \widehat\Lambda_k \left(\widehat\Lambda_k^\top\widehat\Lambda_k\right)^{-1} \widehat\Lambda_k^\top, \qquad k=1,2.$$
+
+These matrices are the estimated loading spaces. We transform the second dataset as follows: Düker and Pipiras (2024):
+$$Y_t= \begin{cases} \frac12(\widehat P_1+I_d)X_t^{(2)},&t\leq T/2,\\ \frac12(\widehat P_2+I_d)X_t^{(2)},&t>T/2. \end{cases}$$
+
+We split the observations in half, with an even $T$. Under the null the population projections are the same so that the transformation does not induce any loading break. It induces a middle break under suitable alternatives. To get our Wald Statistic we  first calculate
+
+$$V(\widehat F) = \operatorname{vech} \left[ \frac{1}{\sqrt T} \left( \sum_{t=1}^{T/2}\widehat F_t\widehat F_t^\top \right) \left(\sum_{t=T/2+1}^{T}\widehat F_t\widehat F_t^\top \right) \right].$$
+
+The operator $\operatorname{vech}$ stacks the lower‐triangle elements, including the diagonal, into a vector. The Wald statistic is $W(\widehat F)=V(\widehat F)^T\Omega(\widehat F)^{-1}V(\widehat F)$. where $\widehat F$ is an estimate of the long-run covariance allowing for serial dependence. The bandwidth dictates the weights placed upon lagged covariance terms.
+
+Large values of $W$ provide evidence against the null hypothesis. Under the assumptions of the paper, the null distribution, when using $q$ factors, is asymptotically chi-square on $q(q+1)/2$ degrees of freedom.
+
+#### Simulated Dataset Application
+
+We generate two datasets from the factor model $X_t^{(k)}=\Lambda_kF_t^{(k)}+\varepsilon_t^{(k)}$, where $k=1,2$. Each dataset has three common factors. The factors and errors follow independent standard normal distributions and are independent across time and datasets.
+
+We consider $(d,T)=(200,200)$ and $(d,T)=(500,500)$. The loading matrices are
+$$\Lambda_1=\Lambda,\qquad \Lambda_2=\Lambda\Phi+\delta B,$$
+where $\Lambda$ and $B$ have independent standard normal entries, $\Phi=\operatorname{diag}(0.8,1,1.2)$, and $\delta\in\{0,0.25,0.5,1\}$.
+
+When $\delta=0$, the transformation preserves the loading space, so the null holds. Positive values of $\delta$ change the loading space with probability one in this simulation. We estimate the original loading spaces using three principal components. After transforming the second dataset, we select its factor count using a Bai–Ng information criterion. The stated simulation design uses 500 replications at significance level $\alpha=0.05$. The rejection proportion at $\delta=0$ estimates size, while the rejection proportion at positive $\delta$ estimates power.
+
+For one replication with $d=T=200$, the analysis is as follows:
+
+| $\delta$ | Factors | Bandwidth | df | Wald| p-value | Decision |
+|:---:|:---:|:---:|:---:|---:|---:|:---|
+| 0.00 | 3 | 6 | 6 | 3.515 | 0.742 | Not reject |
+| 0.25 | 3 | 6 | 6 | 3.429 | 0.753 | Not reject |
+| 0.50 | 6 | 6 | 21 | 32.926 | 0.047 | Reject |
+| 1.00 | 6 | 6 | 21 | 33.018 | 0.046 | Reject |
+
+The test does not reject at $\delta=0$ or $\delta=0.25$. However, the loading spaces differ when $\delta=0.25$, showing that a small departure can be difficult to detect. Failure to reject does not establish equal loading spaces. The test rejects at $\delta=0.5$ and $\delta=1$. At level $\alpha = 0.05$, the critical values are $W_{\text{crit}} = 12.592$ for six degrees of freedom and $W_{\text{crit}} = 32.671$ for 21 degrees of freedom. Selecting six factors refers to the transformed series. Both original datasets still have three factors, but different loading directions across the transformed halves can require a larger combined representation. 
+
+The plots show that datasets can fluctuate around zero even when their loading spaces differ. The population projection difference provides a clearer illustration: $P_{0,2}-P_{0,1}=0$ under the null and is nonzero when the spaces differ. The simulation provides the true projections, while the test uses estimated projections. These results concern independent Gaussian factors and errors. Further simulations are needed to assess performance with temporal dependence or heavy-tailed errors.
+
+#### Real Dataset Application
+
+We compare daily returns for the same stocks in 2020 and 2025. Stocks are the observed variables, and trading days are the time observations. We identify stocks appearing in the S&P 500 membership lists at the beginning of both years using this public historical reconstruction: <https://github.com/chinobing/historical_sp500_constituents>
+
+These stocks were not necessarily members throughout both years. Some companies also have multiple share classes. We download adjusted prices from Yahoo Finance using `quantmod` and calculate daily log returns. Prices from the preceding December allow us to calculate each year's first return. SPY provides the trading dates but is not included as an analysis variable. We exclude stocks with invalid prices, missing returns, or zero return variance. Both datasets contain the same stocks in the same order.
+
+We center returns within each year and divide each stock's returns by a common pooled standard deviation. For testing, we keep an equal, even number of observations and recenter the retained data. The exact stock count, dates, and exclusions should be recorded from the final run.
+
+Our PCA results:
+
+| Principal components | 2020 | 2025 |
+|:---|---:|---:|
+| First principal component | 57.209% | 30.327% |
+| First three principal components | 67.906% | 43.780% |
+
+The leading components explain more variation in 2020. However, these percentages do not tell us whether the loading spaces are equal. With three factors, bandwidth seven, and the 2025 series transformed, the results are $W=17.918$ and $p=0.006442$. We reject the common-loading-space hypothesis at  $\alpha = 0.05$ for this example
+
+#### Conclusion and Future Work
+
+We studied a test for whether two factor models share the same loading space. The method uses PCA to estimate the spaces, transforms one dataset, and applies a Wald test to compare factor second moments across the transformed halves.
+
+The preliminary Gaussian simulations suggest that smaller departures are harder to detect than larger ones. The stock-return analysis rejects common structure between 2020 and 2025 with three factors and bandwidth seven. However, this conclusion depends on the specification, and we still need to reproduce it using the final data and code.
+
+Adding the Bai–Ng criterion allowed the transformed factor count to be selected from the data. This changed the degrees of freedom and p-values. In the updated single-replication example, we still reject for the larger departures and do not reject for the smallest positive departure. Repeated simulations are needed to assess power.
+
+Future simulations will vary sample size, dimension, factor count, error magnitude, and the departure from common structure. We will include more values of $\delta$ between zero and 0.5, along with heavy-tailed errors and autoregressive dependence.
+
+We will measure size, power, selected factor counts, loading-space estimation error, and numerical failures. Monte Carlo standard errors will describe uncertainty in the rejection proportions. Loading-space error will be measured by the Frobenius distance between estimated and true projection matrices.
+
+We also plan to compare what this procedure and FarmTest detect under four scenarios:
+
+| Scenario | Mean differences | Loading spaces |
+|:---|:---|:---|
+| Baseline | Absent | Common |
+| Mean departure | Present | Common |
+| Structural departure | Absent | Different |
+| Combined departure | Present | Different |
+
+The structural test concerns loading spaces, while FarmTest concerns individual means. We will evaluate each method for its own hypothesis rather than treat their rejection rates as directly comparable. Mean tests with Benjamini–Hochberg adjustment will provide a baseline for the mean-testing task.
+
+#### References
+
+Düker, M.-C., and Pipiras, V. (2024). Testing for common structures in high-dimensional factor models. arXiv:2403.19818v1. <https://arxiv.org/abs/2403.19818v1>
+
+Fan, J., Wang, K., Zhong, Y., and Zhu, Z. (2021). Robust high-dimensional factor models with applications to statistical machine learning. *Statistical Science*, 36(2), 303–327. <https://doi.org/10.1214/20-STS785>
+
+Han, X., and Inoue, A. (2015). Tests for parameter instability in dynamic factor models. *Econometric Theory*, 31, 1117–1152.
