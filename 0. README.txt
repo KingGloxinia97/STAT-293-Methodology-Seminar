@@ -1,4 +1,4 @@
 # STAT-293-Methodology-Seminar
 
 This is the repository for the midterm methodology seminar for STAT 293 with Dr. Sanchez-Gomez Fall 2026.
-Important Note: The S&P500 dataset is more of a place holder. Rather using the 
+Important Note: The S&P500 dataset is more of a place holder. Rather using the quantmod package allows us to find individual stocks. This acts as the dataset for our data cleaning and data analysis.
